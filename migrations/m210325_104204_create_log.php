@@ -14,10 +14,12 @@ class m210325_104204_create_log extends Migration
     {
         $this->createTable('{{%log}}', [
             'id' => $this->primaryKey(),
-            'user_id' => $this->integer()->notNull(),
-            'message' => $this->string(),
-            'created_at' => $this->integer()
+            'user_id' => $this->integer(),
+            'message' => $this->text(),
+            'created_at' => $this->integer()->notNull()
         ]);
+
+        $this->createIndex('idx-log-user_id', '{{%log}}', 'user_id');
     }
 
     /**

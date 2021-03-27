@@ -9,9 +9,9 @@ use yii\behaviors\TimestampBehavior;
  * This is the model class for table "log".
  *
  * @property int $id
- * @property int $user_id
+ * @property int|null $user_id
  * @property string|null $message
- * @property int|null $created_at
+ * @property int $created_at
  */
 class Log extends \yii\db\ActiveRecord
 {
@@ -29,7 +29,6 @@ class Log extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id'], 'required'],
             [['user_id'], 'integer'],
             [['message'], 'string'],
         ];
