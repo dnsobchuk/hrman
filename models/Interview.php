@@ -2,7 +2,7 @@
 
 namespace app\models;
 
-use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "interview".
@@ -20,6 +20,62 @@ use Yii;
  */
 class Interview extends \yii\db\ActiveRecord
 {
+    const STATUS_NEW = 1;
+    const STATUS_PASS = 2;
+    const STATUS_REJECT = 3;
+
+    /**
+     * @return array
+     */
+    public static function getStatusList()
+    {
+        return [
+            self::STATUS_NEW => 'New',
+            self::STATUS_PASS => 'Passed',
+            self::STATUS_REJECT => 'Rejected',
+        ];
+    }
+
+    /**
+     * @return mixed
+     * @throws \Exception
+     */
+    public function getStatusName()
+    {
+        return ArrayHelper::getValue(self::getStatusList(), $this->status);
+    }
+
+    /**
+     * @param $firstName
+     * @param $lastName
+     * @param $email
+     * @param $date
+     * @return self
+     */
+    public static function create($firstName, $lastName, $email, $date) {
+        $interview = new self;
+        $interview->date = $date;
+        $interview->first_name = $firstName;
+        $interview->last_name = $lastName;
+        $interview->email = $email;
+        $interview->status = self::STATUS_NEW;
+        return $interview;
+    }
+
+    public function editData($lastName, $firstName, $email)
+    {
+        $this->first_name = $firstName;
+        $this->last_name = $lastName;
+        $this->email = $email;
+    }
+
+    public function reject($reason)
+    {
+        $this->guardNotRejected();
+        $this->reject_reason = $reason;
+        $this->status = self::STATUS_REJECT;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -39,7 +95,7 @@ class Interview extends \yii\db\ActiveRecord
             [['status', 'employee_id'], 'integer'],
             [['reject_reason'], 'string'],
             [['first_name', 'last_name', 'email'], 'string', 'max' => 255],
-            [['employee_id'], 'exist', 'skipOnError' => true, 'targetClass' => Employee::className(), 'targetAttribute' => ['employee_id' => 'id']],
+            [['employee_id'], 'exist', 'skipOnError' => true, 'targetClass' => Employee::class, 'targetAttribute' => ['employee_id' => 'id']],
         ];
     }
 
@@ -67,6 +123,13 @@ class Interview extends \yii\db\ActiveRecord
      */
     public function getEmployee()
     {
-        return $this->hasOne(Employee::className(), ['id' => 'employee_id']);
+        return $this->hasOne(Employee::class, ['id' => 'employee_id']);
+    }
+
+    private function guardNotRejected()
+    {
+        if($this->status == self::STATUS_REJECT) {
+            throw new \RuntimeException('Interview is already rejected');
+        }
     }
 }
