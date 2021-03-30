@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\forms\InterviewJoinForm;
+use app\forms\InterviewMoveForm;
 use app\forms\InterviewRejectForm;
 use app\forms\InterviewUpdateForm;
 use app\services\StaffService;
@@ -85,6 +86,26 @@ class InterviewController extends Controller
     }
 
     /**
+     * @param integer $id
+     * @return mixed
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionMove($id)
+    {
+        $interview = $this->findModel($id);
+        $form = new InterviewMoveForm($interview);
+
+        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+            $this->staffService->moveInterview($interview, $form);
+            return $this->redirect(['view', 'id' => $interview->id]);
+        }
+        return $this->render('move', [
+            'moveForm' => $form,
+            'model' => $interview,
+        ]);
+    }
+
+    /**
      * Updates an existing Interview model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
@@ -97,7 +118,7 @@ class InterviewController extends Controller
         $form = new InterviewUpdateForm($interview);
 
         if ($form->load(Yii::$app->request->post()) && $form->validate()) {
-            $this->staffService->updateInterview($interview->id, $form->lastName, $form->firstName, $form->email);
+            $this->staffService->updateInterview($interview, $form);
             return $this->redirect(['view', 'id' => $interview->id]);
         }
         return $this->render('update', [
@@ -119,7 +140,7 @@ class InterviewController extends Controller
         $form = new InterviewRejectForm();
 
         if ($form->load(Yii::$app->request->post()) && $form->validate()) {
-            $this->staffService->rejectInterview($interview->id, $form);
+            $this->staffService->rejectInterview($interview, $form);
             return $this->redirect(['view', 'id' => $interview->id]);
         }
         return $this->render('reject', [

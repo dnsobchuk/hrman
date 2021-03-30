@@ -2,6 +2,10 @@
 
 namespace app\services;
 
+use app\forms\InterviewJoinForm;
+use app\forms\InterviewMoveForm;
+use app\forms\InterviewRejectForm;
+use app\forms\InterviewUpdateForm;
 use app\models\Interview;
 use app\repositories\InterviewRepositoryInterface;
 
@@ -22,38 +26,44 @@ class StaffService
         $this->notifier = $notifier;
     }
 
-    public function joinToInterview($form)
+    public function joinToInterview(InterviewJoinForm $form)
     {
         $interview = Interview::create($form->firstName, $form->lastName, $form->email, $form->date);
         $this->repository->add($interview);
         if($interview->email) {
-            $this->notifier->notify('/interview/join', ['model' => $interview, 'joinForm' => $form], $interview->email,
-                'You are joined to interview!');
+            $this->notifier->notify('/interview/join', ['model' => $interview, 'joinForm' => $form],
+                $interview->email,'You are joined to interview!');
         }
         $this->logger->log("Interview {$interview->id} is created");
         return $interview;
     }
 
-    public function updateInterview($id, $lastName, $firstName, $email)
+    public function updateInterview(Interview $interview, InterviewUpdateForm $form)
     {
-
-        /** @var Interview $interview */
-        $interview = $this->repository->find($id);
-        $interview->editData($lastName, $firstName, $email);
+        $interview->editData($form->lastName, $form->firstName, $form->email);
         $this->repository->save($interview);
         $this->logger->log("Interview {$interview->id} is updated");
     }
 
-    public function rejectInterview($id, $form)
+    public function moveInterview(Interview $interview, InterviewMoveForm $form)
     {
-        /** @var Interview $interview */
-        $interview = $this->repository->find($id);
+        $interview->move($form->date);
+        $this->repository->save($interview);
+        if($interview->email) {
+            $this->notifier->notify('/interview/move', ['model' => $interview, 'moveForm' => $form],
+                $interview->email,"You interview is moved to {$interview->date}");
+        }
+        $this->logger->log("Interview {$interview->id} date is moved");
+    }
+
+    public function rejectInterview(Interview $interview, InterviewRejectForm $form)
+    {
         $interview->reject($form->reason);
         $this->repository->save($interview);
         if($interview->email) {
             $this->notifier->notify('/interview/reject', ['model' => $interview, 'rejectForm' => $form],
                 $interview->email,'You are failed an interview');
         }
-        $this->logger->log("Interview {$interview->id} is updated");
+        $this->logger->log("Interview {$interview->id} is rejected");
     }
 }

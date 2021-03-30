@@ -69,6 +69,11 @@ class Interview extends \yii\db\ActiveRecord
         $this->email = $email;
     }
 
+    public function move($date) {
+        $this->guardNotCurrentDate($date);
+        $this->date = $date;
+    }
+
     public function reject($reason)
     {
         $this->guardNotRejected();
@@ -76,32 +81,11 @@ class Interview extends \yii\db\ActiveRecord
         $this->status = self::STATUS_REJECT;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function tableName()
     {
         return 'interview';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function rules()
-    {
-        return [
-            [['date', 'first_name', 'last_name', 'status'], 'required'],
-            [['date'], 'safe'],
-            [['status', 'employee_id'], 'integer'],
-            [['reject_reason'], 'string'],
-            [['first_name', 'last_name', 'email'], 'string', 'max' => 255],
-            [['employee_id'], 'exist', 'skipOnError' => true, 'targetClass' => Employee::class, 'targetAttribute' => ['employee_id' => 'id']],
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function attributeLabels()
     {
         return [
@@ -131,5 +115,16 @@ class Interview extends \yii\db\ActiveRecord
         if($this->status == self::STATUS_REJECT) {
             throw new \RuntimeException('Interview is already rejected');
         }
+    }
+    private function guardNotCurrentDate($date)
+    {
+        if($this->date == $date) {
+            throw new \RuntimeException('Date is current');
+        };
+    }
+
+    public function isRecruitable()
+    {
+        return $this->status == self::STATUS_PASS;
     }
 }
