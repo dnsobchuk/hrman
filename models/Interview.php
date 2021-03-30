@@ -80,6 +80,12 @@ class Interview extends \yii\db\ActiveRecord
         $this->reject_reason = $reason;
         $this->status = self::STATUS_REJECT;
     }
+    public function pass($employee_id)
+    {
+        $this->employee_id = $employee_id;
+        $this->guardNotPassed();
+        $this->status = self::STATUS_PASS;
+    }
 
     public static function tableName()
     {
@@ -114,6 +120,12 @@ class Interview extends \yii\db\ActiveRecord
     {
         if($this->status == self::STATUS_REJECT) {
             throw new \RuntimeException('Interview is already rejected');
+        }
+    }
+    private function guardNotPassed()
+    {
+        if($this->status == self::STATUS_PASS) {
+            throw new \RuntimeException('Interview is already passed');
         }
     }
     private function guardNotCurrentDate($date)

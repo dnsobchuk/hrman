@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "employee".
@@ -14,7 +15,7 @@ use Yii;
  * @property string|null $email
  * @property int $status
  *
- * @property Assignment[] $assigments
+ * @property Assignment[] $assignments
  * @property Bonus[] $bonuses
  * @property Dismiss[] $dismisses
  * @property Interview[] $interviews
@@ -23,6 +24,26 @@ use Yii;
  */
 class Employee extends \yii\db\ActiveRecord
 {
+    const STATUS_PROBATION = 1;
+    const STATUS_WORK = 2;
+    const STATUS_VACATION = 3;
+    const STATUS_DISMISS = 4;
+
+    public static function getStatusList()
+    {
+        return [
+            self::STATUS_PROBATION => 'Probation',
+            self::STATUS_WORK => 'Work',
+            self::STATUS_VACATION => 'Vacation',
+            self::STATUS_DISMISS => 'Dismiss',
+        ];
+    }
+
+    public function getStatusName()
+    {
+        return ArrayHelper::getValue(self::getStatusList(), $this->status);
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -32,30 +53,20 @@ class Employee extends \yii\db\ActiveRecord
     }
 
     /**
-     * {@inheritdoc}
+     * @param $firstName
+     * @param $lastName
+     * @param $address
+     * @param $email
+     * @return self
      */
-    public function rules()
-    {
-        return [
-            [['first_name', 'last_name', 'address', 'status'], 'required'],
-            [['status'], 'integer'],
-            [['first_name', 'last_name', 'address', 'email'], 'string', 'max' => 255],
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function attributeLabels()
-    {
-        return [
-            'id' => 'ID',
-            'first_name' => 'First Name',
-            'last_name' => 'Last Name',
-            'address' => 'Address',
-            'email' => 'Email',
-            'status' => 'Status',
-        ];
+    public static function create($firstName, $lastName, $address, $email) {
+        $employee = new self;
+        $employee->first_name = $firstName;
+        $employee->last_name = $lastName;
+        $employee->address = $address;
+        $employee->email = $email;
+        $employee->status = self::STATUS_PROBATION;
+        return $employee;
     }
 
     /**

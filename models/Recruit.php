@@ -25,6 +25,15 @@ class Recruit extends \yii\db\ActiveRecord
         return 'recruit';
     }
 
+    public static function create($order_id, $employee_id, $recruitDate)
+    {
+        $recruit = new self;
+        $recruit->order_id = $order_id;
+        $recruit->employee_id = $employee_id;
+        $recruit->date = $recruitDate;
+        return $recruit;
+    }
+
     /**
      * {@inheritdoc}
      */

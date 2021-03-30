@@ -25,6 +25,16 @@ class Contract extends \yii\db\ActiveRecord
         return 'contract';
     }
 
+    public static function create($employee_id, $firstName, $lastName, $contractDate)
+    {
+        $contract = new self;
+        $contract->employee_id = $employee_id;
+        $contract->first_name = $firstName;
+        $contract->last_name = $lastName;
+        $contract->date_open = $contractDate;
+        return $contract;
+    }
+
     /**
      * {@inheritdoc}
      */

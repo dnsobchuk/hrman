@@ -2,6 +2,9 @@
 
 namespace app\controllers;
 
+use app\forms\EmployeeCreateForm;
+use app\models\Interview;
+use app\services\StaffService;
 use Yii;
 use app\models\Employee;
 use app\forms\search\EmployeeSearch;
@@ -14,6 +17,14 @@ use yii\filters\VerbFilter;
  */
 class EmployeeController extends Controller
 {
+    private $staffService;
+
+    public function __construct($id, $module, StaffService $staffService, $config = [])
+    {
+        $this->staffService = $staffService;
+        parent::__construct($id, $module, $config);
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -60,19 +71,24 @@ class EmployeeController extends Controller
     /**
      * Creates a new Employee model.
      * If creation is successful, the browser will be redirected to the 'view' page.
+     * @param $interview_id
      * @return mixed
+     * @throws NotFoundHttpException
+     * @throws \yii\web\ServerErrorHttpException
      */
-    public function actionCreate()
+    public function actionCreate($interview_id)
     {
-        $model = new Employee();
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if($interview_id) {
+            $interview = $this->findInterviewModel($interview_id);
+        } else {
+            $interview = null;
         }
-
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        $form = new EmployeeCreateForm($interview);
+        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+            $employee = $this->staffService->createEmployee($form, $interview);
+            return $this->redirect(['view', 'id' => $employee->id]);
+        }
+        return $this->render('create', ['createForm' => $form]);
     }
 
     /**
@@ -101,6 +117,8 @@ class EmployeeController extends Controller
      * @param integer $id
      * @return mixed
      * @throws NotFoundHttpException if the model cannot be found
+     * @throws \Throwable
+     * @throws \yii\db\StaleObjectException
      */
     public function actionDelete($id)
     {
@@ -119,6 +137,22 @@ class EmployeeController extends Controller
     protected function findModel($id)
     {
         if (($model = Employee::findOne($id)) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * Finds the Employee model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     * @param integer $id
+     * @return Interview the loaded model
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    protected function findInterviewModel($id)
+    {
+        if (($model = Interview::findOne($id)) !== null) {
             return $model;
         }
 
